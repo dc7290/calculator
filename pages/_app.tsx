@@ -3,17 +3,12 @@ import 'focus-visible'
 
 import { AppProps } from 'next/app'
 
-import { Layout } from '~/src/components/layout/Layout'
 import useWindowNarrow from '~/src/hooks/useWindowNarrow'
 
 function MyApp({ Component, pageProps }: AppProps) {
   useWindowNarrow()
 
-  return (
-    <Layout>
-      <Component {...pageProps} />
-    </Layout>
-  )
+  return <Component {...pageProps} />
 }
 
 export default MyApp
