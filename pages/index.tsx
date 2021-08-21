@@ -4,12 +4,15 @@ import { useReducer } from 'react'
 import { Button } from '~/src/components/base/atoms/Button'
 import { IndicatesField } from '~/src/components/base/atoms/IndicatesField'
 
+type CalculateType = 'add' | 'subtract' | 'multiple' | 'divide'
+
 type State =
   | {
       firstValue: string
-      secondValue: string
+      secondValue: null | string
       result: null
       isPending: true
+      calculateType: CalculateType
     }
   | {
       firstValue: string
@@ -22,6 +25,10 @@ type Action =
   | {
       type: 'set'
       payload: string
+    }
+  | {
+      type: 'setCalculate'
+      calculateType: CalculateType
     }
   | {
       type: 'transform'
@@ -37,12 +44,12 @@ const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case 'set':
       if (state.isPending) {
-        if (state.secondValue.length === 9) {
+        if (state.secondValue?.length === 9) {
           return state
         }
 
         if (action.payload === '.') {
-          if (state.secondValue.includes('.')) {
+          if (state.secondValue?.includes('.')) {
             return state
           } else {
             return {
@@ -78,6 +85,22 @@ const reducer = (state: State, action: Action): State => {
         }
       }
 
+    case 'setCalculate':
+      if (state.isPending) {
+        return {
+          ...state,
+          isPending: true,
+          calculateType: action.calculateType,
+        }
+      } else {
+        return {
+          ...state,
+          result: null,
+          isPending: true,
+          calculateType: action.calculateType,
+        }
+      }
+
     case 'transform':
       if (state.isPending) {
         if (state.secondValue === '0') {
@@ -86,7 +109,7 @@ const reducer = (state: State, action: Action): State => {
 
         return {
           ...state,
-          secondValue: state.secondValue.startsWith('-')
+          secondValue: state.secondValue?.startsWith('-')
             ? state.secondValue.replace(/^-/, '')
             : `-${state.secondValue}`,
         }
@@ -106,7 +129,7 @@ const reducer = (state: State, action: Action): State => {
         return {
           ...state,
           secondValue:
-            state.secondValue.endsWith('0') || state.secondValue.endsWith('.')
+            state.secondValue?.endsWith('0') || state.secondValue?.endsWith('.')
               ? '0'
               : (Number(state.secondValue) / 100).toString(),
         }
@@ -139,8 +162,8 @@ const initialState: State = {
 const IndexPage: NextPage = () => {
   const [{ firstValue, secondValue, result }, dispatch] = useReducer(reducer, initialState)
 
-  const handleAllClear = () => {
-    dispatch({ type: 'allClear' })
+  const handleNumberInput = (num: string) => {
+    dispatch({ type: 'set', payload: num })
   }
   const handleTransform = () => {
     dispatch({ type: 'transform' })
@@ -148,8 +171,11 @@ const IndexPage: NextPage = () => {
   const handlePercentage = () => {
     dispatch({ type: 'percentage' })
   }
-  const handleNumberInput = (num: string) => {
-    dispatch({ type: 'set', payload: num })
+  const handleSetCalculate = (calculateType: CalculateType) => {
+    dispatch({ type: 'setCalculate', calculateType })
+  }
+  const handleAllClear = () => {
+    dispatch({ type: 'allClear' })
   }
 
   return (
@@ -160,19 +186,19 @@ const IndexPage: NextPage = () => {
           <Button text="AC" className="text-white bg-gray-500" onPress={handleAllClear} />
           <Button text="+/-" className="text-white bg-gray-500" onPress={handleTransform} />
           <Button text="%" className="text-white bg-gray-500" onPress={handlePercentage} />
-          <Button text="÷" className="bg-yellow-400" />
+          <Button text="÷" className="bg-yellow-400" onPress={() => handleSetCalculate('divide')} />
           <Button text="7" className="bg-indigo-200/90" onPress={() => handleNumberInput('7')} />
           <Button text="8" className="bg-indigo-200/90" onPress={() => handleNumberInput('8')} />
           <Button text="9" className="bg-indigo-200/90" onPress={() => handleNumberInput('9')} />
-          <Button text="×" className="bg-yellow-400" />
+          <Button text="×" className="bg-yellow-400" onPress={() => handleSetCalculate('multiple')} />
           <Button text="4" className="bg-indigo-200/90" onPress={() => handleNumberInput('4')} />
           <Button text="5" className="bg-indigo-200/90" onPress={() => handleNumberInput('5')} />
           <Button text="6" className="bg-indigo-200/90" onPress={() => handleNumberInput('6')} />
-          <Button text="-" className="bg-yellow-400" />
+          <Button text="-" className="bg-yellow-400" onPress={() => handleSetCalculate('subtract')} />
           <Button text="1" className="bg-indigo-200/90" onPress={() => handleNumberInput('1')} />
           <Button text="2" className="bg-indigo-200/90" onPress={() => handleNumberInput('2')} />
           <Button text="3" className="bg-indigo-200/90" onPress={() => handleNumberInput('3')} />
-          <Button text="+" className="bg-yellow-400" />
+          <Button text="+" className="bg-yellow-400" onPress={() => handleSetCalculate('add')} />
           <Button text="0" className="bg-indigo-200/90 col-span-2" onPress={() => handleNumberInput('0')} />
           <Button text="." className="bg-indigo-200/90" onPress={() => handleNumberInput('.')} />
           <Button text="=" className="bg-yellow-400" />
